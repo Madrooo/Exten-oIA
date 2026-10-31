@@ -1,8 +1,10 @@
+import os
 import re
 import tensorflow as tf
 
-# Pasta com as imagens (contém as subpastas cardboard, glass, metal, paper, plastic, trash)
-DATASET_DIR = "Garbage classification/"
+# Pasta com as imagens (contém as subpastas cardboard, glass, metal, paper, plastic, trash).
+# O caminho é relativo à pasta onde os scripts estão (a mesma do dados.py).
+DATASET_DIR = "Garbage classification"
 
 # Arquivos .txt do Kaggle com a divisão oficial (coloque-os na mesma pasta dos scripts)
 ARQ_TREINO = "one-indexed-files-notrash_train.txt"
@@ -39,6 +41,8 @@ def carregar(arquivo, embaralhar=False):
 
 
 def carregar_tudo():
+    if not os.path.isdir(f"{DATASET_DIR}/cardboard"):
+        raise SystemExit(f"Nao encontrei '{DATASET_DIR}/cardboard' a partir de {os.getcwd()}. Ajuste DATASET_DIR no dados.py.")
     with open("classes.txt", "w") as f:
         f.write("\n".join(CLASSES))
     treino = carregar(ARQ_TREINO, embaralhar=True)

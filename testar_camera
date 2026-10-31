@@ -1,0 +1,13 @@
+import cv2
+
+# Tenta abrir as câmeras de 0 a 5 e mostra a imagem de cada uma que funcionar.
+# Aperte qualquer tecla para passar para a próxima.
+for i in range(6):
+    camera = cv2.VideoCapture(i)
+    ok, frame = camera.read() if camera.isOpened() else (False, None)
+    print(f"Câmera {i}:", "funciona" if ok else "não abriu")
+    if ok:
+        cv2.imshow(f"Camera {i} (aperte uma tecla)", frame)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
+    camera.release()

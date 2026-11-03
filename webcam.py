@@ -6,9 +6,8 @@ modelo = tf.keras.models.load_model("modelo.keras")
 with open("classes.txt") as f:
     classes = f.read().splitlines()
 
-# Número da câmera: 0 costuma ser a webcam do notebook; a GoPro geralmente é 1 ou 2.
-# Rode testar_camera.py para descobrir qual número é a GoPro.
-CAMERA = 5
+# Rode testar_camera.py para descobrir qual número é a camera.
+CAMERA = 0  
 # Se a imagem ficar preta no Windows, troque por cv2.CAP_DSHOW
 MODO = cv2.CAP_ANY
 

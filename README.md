@@ -377,6 +377,6 @@ A janela mostra a classe prevista e a confiança. Aperte **`q`** para sair.
 ## Créditos
 
 - **Autor:** Matheus Oliveira Silva, estudante de Ciência da Computação no IFCE ([GitHub](https://github.com/Madrooo))
-- **Dataset:** [Garbage Classification no Kaggle](https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification/data), derivado do TrashNet (Gary Thung e Mindy Yang). Consulte a página do dataset para a licença de uso.
+- **Dataset:** [Garbage Classification no Kaggle](https://www.kaggle.com/datasets/asdasdasasdas/garbage-classification/data), derivado do TrashNet (Gary Thung e Mindy Yang).
 - **MobileNetV2:** pesos pré-treinados na ImageNet, distribuídos com o Keras/TensorFlow.
 - Projeto acadêmico de extensão da disciplina de Inteligência Artificial.

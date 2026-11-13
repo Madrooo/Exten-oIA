@@ -7,7 +7,7 @@ with open("classes.txt") as f:
     classes = f.read().splitlines()
 
 # Rode testar_camera.py para descobrir qual número é a camera.
-CAMERA = 0  
+CAMERA = 5  
 # Se a imagem ficar preta no Windows, troque por cv2.CAP_DSHOW
 MODO = cv2.CAP_ANY
 

@@ -1,0 +1,107 @@
+
+String bufferSerial = "";
+
+String ultimoID = "";
+String ultimaCategoria = "";
+
+void piscarLED() {
+  for (int i = 0; i < 3; i++) {
+    digitalWrite(LED_BUILTIN, LOW);
+    delay(200);
+
+    digitalWrite(LED_BUILTIN, HIGH);
+    delay(200);
+  }
+}
+
+bool categoriaValida(String categoria) {
+  return categoria == "cardboard" ||
+         categoria == "glass" ||
+         categoria == "metal" ||
+         categoria == "paper" ||
+         categoria == "plastic";
+}
+
+void enviarConfirmacao(String id, String categoria) {
+  Serial.print("DONE|");
+  Serial.print(id);
+  Serial.print("|");
+  Serial.println(categoria);
+}
+
+void processarMensagem(String mensagem) {
+
+  mensagem.trim();
+
+  int separador = mensagem.indexOf('|');
+
+  if (separador <= 0) {
+    Serial.println("NACK|FORMATO");
+    return;
+  }
+
+  String id = mensagem.substring(0, separador);
+  String categoria = mensagem.substring(separador + 1);
+
+  categoria.trim();
+  categoria.toLowerCase();
+
+  if (!categoriaValida(categoria)) {
+    Serial.print("NACK|");
+    Serial.println(id);
+    return;
+  }
+
+  // Evita executar duas vezes a mesma mensagem
+  if (id == ultimoID) {
+
+    if (categoria == ultimaCategoria) {
+      enviarConfirmacao(id, categoria);
+    }
+
+    return;
+  }
+
+  ultimoID = id;
+  ultimaCategoria = categoria;
+
+  // Executa a acao
+  piscarLED();
+
+  // Confirma somente depois de terminar
+  enviarConfirmacao(id, categoria);
+}
+
+void setup() {
+
+  pinMode(LED_BUILTIN, OUTPUT);
+
+  digitalWrite(LED_BUILTIN, HIGH);
+
+  Serial.begin(115200);
+}
+
+void loop() {
+
+  while (Serial.available() > 0) {
+
+    char caractere = Serial.read();
+
+    if (caractere == '\n') {
+
+      processarMensagem(bufferSerial);
+
+      bufferSerial = "";
+
+    }
+    else if (caractere != '\r') {
+
+      if (bufferSerial.length() < 100) {
+        bufferSerial += caractere;
+      }
+      else {
+        bufferSerial = "";
+      }
+    }
+  }
+}

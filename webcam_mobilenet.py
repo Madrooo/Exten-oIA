@@ -8,9 +8,9 @@ import uuid
 
 from collections import deque, Counter
 
-# ==========================================
-# 1. MODELO E CLASSES
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# modelo e classes
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 modelo = tf.keras.models.load_model("modelo_mobilenet.keras")
 
@@ -19,9 +19,9 @@ with open("classes.txt") as f:
 
 print("Classes:", classes)
 
-# ==========================================
-# 2. CONFIGURACOES
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# configurações
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 CAMERA = 5
 MODO = cv2.CAP_ANY
@@ -39,13 +39,13 @@ LIMITE_ALTURA = 600
 
 NOME_JANELA = "Classificador de lixo"
 
-# Identificador unico desta execucao
+#identificador para cada execução do programa
 sessao = uuid.uuid4().hex[:8]
 contador = 0
 
-# ==========================================
-# 3. COMUNICACAO COM ESP8266
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# conexão com esp8266
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 print("Conectando ao ESP8266...")
 
@@ -55,16 +55,16 @@ esp = serial.Serial(
     timeout=0.1
 )
 
-# O ESP8266 pode reiniciar ao abrir a porta
+#espera o esp8266 iniciar depois de abrir a conexão
 time.sleep(2.5)
 
 esp.reset_input_buffer()
 
 print("ESP8266 conectado!")
 
-# ==========================================
-# 4. FUNCAO DE ENVIO E CONFIRMACAO
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# envio dos resultados pro esp8266
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 def enviar_e_aguardar(id_mensagem, categoria):
 
@@ -112,9 +112,9 @@ def enviar_e_aguardar(id_mensagem, categoria):
     return False
 
 
-# ==========================================
-# 5. FUNCAO PARA APAGAR OS LEDS
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# liberar os leds para a próxima leitura
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 def liberar_esp():
 
@@ -145,9 +145,9 @@ def liberar_esp():
     return False
 
 
-# ==========================================
-# 6. INICIAR CAMERA
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# abrir a camera
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 camera = cv2.VideoCapture(CAMERA, MODO)
 
@@ -161,22 +161,22 @@ if not camera.isOpened():
 
 print("Camera iniciada!")
 
-# ==========================================
-# 7. CONTROLE DE IDENTIFICACAO
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# controle da identificação
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 historico = deque(maxlen=JANELA_VOTACAO)
 
 armado = True
 
-# Guarda uma mensagem que ainda nao recebeu confirmacao
+#guarda o resultado caso o esp não confirme o recebimento
 pendente = None
 
 status = "Aguardando objeto..."
 
-# ==========================================
-# 8. PROCESSAMENTO PRINCIPAL
-# ==========================================
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
+# processamento principal
+#-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=
 
 try:
 
@@ -188,9 +188,7 @@ try:
             print("Erro ao capturar imagem.")
             break
 
-        # ----------------------------------
-        # PREPARAR IMAGEM
-        # ----------------------------------
+        #preparação da imagem
 
         img = cv2.cvtColor(
             frame,
@@ -207,9 +205,7 @@ try:
             axis=0
         )
 
-        # ----------------------------------
-        # PREDICAO DO TENSORFLOW
-        # ----------------------------------
+        #classificação do material
 
         pred = modelo(
             img,
@@ -222,9 +218,7 @@ try:
 
         categoria = classes[i]
 
-        # ----------------------------------
-        # VOTACAO DAS 15 IMAGENS
-        # ----------------------------------
+        #verifica a votação das 15 imagens
 
         if confianca >= CONFIANCA_MINIMA:
 
@@ -238,9 +232,7 @@ try:
 
             texto = f"Baixa confianca ({confianca:.0%})"
 
-        # ----------------------------------
-        # VERIFICAR CLASSIFICACAO ESTAVEL
-        # ----------------------------------
+        #verifica se a classificação é o suficiente para confirmar o material
 
         if armado and len(historico) == JANELA_VOTACAO:
 
@@ -261,7 +253,7 @@ try:
 
                     print("Votos:", quantidade, "/", JANELA_VOTACAO)
 
-                    # Bloqueia novas classificacoes
+                    #trava para reconhecer um objeto por vez, necessario apertar R para liberar a leitura
                     armado = False
 
                     contador += 1
@@ -275,9 +267,7 @@ try:
 
                     status = "Enviando ao ESP8266..."
 
-                    # ----------------------------------
-                    # ENVIAR E AGUARDAR CONFIRMACAO
-                    # ----------------------------------
+                    #envia o resultado pro esp8266 e espera a confirmação
 
                     sucesso = enviar_e_aguardar(
                         id_mensagem,
@@ -305,9 +295,7 @@ try:
 
                     historico.clear()
 
-        # ----------------------------------
-        # MOSTRAR INFORMACOES NA CAMERA
-        # ----------------------------------
+        #mostra as informações na tela da camera
 
         cv2.putText(
             frame,
@@ -351,9 +339,7 @@ try:
             2
         )
 
-        # ----------------------------------
-        # REDIMENSIONAR CAMERA
-        # ----------------------------------
+        #ajusta o tamanho da imagem da camera
 
         altura, largura = frame.shape[:2]
 
@@ -374,9 +360,7 @@ try:
 
         cv2.imshow(NOME_JANELA, preview)
 
-        # ----------------------------------
-        # CONTROLES DO USUARIO
-        # ----------------------------------
+        #controles para liberar a leitura ou encerrar o programa
 
         tecla = cv2.waitKey(1) & 0xFF
 
@@ -384,7 +368,7 @@ try:
 
             break
 
-        # Liberar para receber outro objeto
+        #libera a leitura para reconhecer o próximo objeto
         elif tecla == ord("r"):
 
             if pendente is None:
@@ -415,7 +399,7 @@ try:
 
                 status = "Aguardando confirmacao do ESP!"
 
-        # Reenviar mensagem pendente com o mesmo ID
+        #tenta enviar novamente o resultado caso não tenha recebido confirmação
         elif tecla == ord("t"):
 
             if pendente is not None:

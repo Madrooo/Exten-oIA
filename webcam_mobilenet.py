@@ -113,7 +113,40 @@ def enviar_e_aguardar(id_mensagem, categoria):
 
 
 # ==========================================
-# 5. INICIAR CAMERA
+# 5. FUNCAO PARA APAGAR OS LEDS
+# ==========================================
+
+def liberar_esp():
+
+    identificador = f"{sessao}-CLEAR-{contador}"
+
+    mensagem = f"CLEAR|{identificador}\n"
+
+    esp.write(mensagem.encode("utf-8"))
+    esp.flush()
+
+    inicio = time.time()
+
+    while time.time() - inicio < 5:
+
+        resposta = esp.readline().decode(
+            "utf-8",
+            errors="replace"
+        ).strip()
+
+        if not resposta:
+            continue
+
+        print("Resposta ESP8266:", resposta)
+
+        if resposta == f"CLEARED|{identificador}":
+            return True
+
+    return False
+
+
+# ==========================================
+# 6. INICIAR CAMERA
 # ==========================================
 
 camera = cv2.VideoCapture(CAMERA, MODO)
@@ -129,7 +162,7 @@ if not camera.isOpened():
 print("Camera iniciada!")
 
 # ==========================================
-# 6. CONTROLE DE IDENTIFICACAO
+# 7. CONTROLE DE IDENTIFICACAO
 # ==========================================
 
 historico = deque(maxlen=JANELA_VOTACAO)
@@ -142,7 +175,7 @@ pendente = None
 status = "Aguardando objeto..."
 
 # ==========================================
-# 7. PROCESSAMENTO PRINCIPAL
+# 8. PROCESSAMENTO PRINCIPAL
 # ==========================================
 
 try:
@@ -356,13 +389,27 @@ try:
 
             if pendente is None:
 
-                armado = True
+                status = "Apagando LED anterior..."
 
-                historico.clear()
+                cv2.waitKey(1)
 
-                status = "Novo objeto: analisando..."
+                sucesso = liberar_esp()
 
-                print("Sistema liberado para novo objeto.")
+                if sucesso:
+
+                    armado = True
+
+                    historico.clear()
+
+                    status = "Novo objeto: analisando..."
+
+                    print("Sistema liberado para novo objeto.")
+
+                else:
+
+                    status = "Nao foi possivel apagar os LEDs!"
+
+                    print("ESP8266 nao confirmou a liberacao.")
 
             else:
 

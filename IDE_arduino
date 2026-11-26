@@ -1,0 +1,124 @@
+
+#define LED_AZUL       16
+#define LED_VERMELHO    5
+#define LED_VERDE       4
+#define LED_AMARELO     0
+#define LED_BRANCO      2
+
+// Estados dos LEDs
+#define AZUL_LIGADO       HIGH
+#define AZUL_DESLIGADO    LOW
+
+#define VERMELHO_LIGADO    HIGH
+#define VERMELHO_DESLIGADO LOW
+
+#define VERDE_LIGADO       HIGH
+#define VERDE_DESLIGADO    LOW
+
+#define AMARELO_LIGADO     HIGH
+#define AMARELO_DESLIGADO  LOW
+
+#define BRANCO_LIGADO      HIGH
+#define BRANCO_DESLIGADO   LOW
+
+String ultimoID = "";
+String ultimaCategoria = "";
+
+void apagarTodos() {
+  digitalWrite(LED_AZUL, AZUL_DESLIGADO);
+  digitalWrite(LED_VERMELHO, VERMELHO_DESLIGADO);
+  digitalWrite(LED_VERDE, VERDE_DESLIGADO);
+  digitalWrite(LED_AMARELO, AMARELO_DESLIGADO);
+  digitalWrite(LED_BRANCO, BRANCO_DESLIGADO);
+}
+
+void acenderLED(String categoria) {
+  apagarTodos();
+
+  if (categoria == "paper") {
+    digitalWrite(LED_AZUL, AZUL_LIGADO);
+  }
+  else if (categoria == "plastic") {
+    digitalWrite(LED_VERMELHO, VERMELHO_LIGADO);
+  }
+  else if (categoria == "glass") {
+    digitalWrite(LED_VERDE, VERDE_LIGADO);
+  }
+  else if (categoria == "metal") {
+    digitalWrite(LED_AMARELO, AMARELO_LIGADO);
+  }
+  else if (categoria == "cardboard") {
+    digitalWrite(LED_BRANCO, BRANCO_LIGADO);
+  }
+}
+
+void setup() {
+  Serial.begin(115200);
+
+  pinMode(LED_AZUL, OUTPUT);
+  pinMode(LED_VERMELHO, OUTPUT);
+  pinMode(LED_VERDE, OUTPUT);
+  pinMode(LED_AMARELO, OUTPUT);
+  pinMode(LED_BRANCO, OUTPUT);
+
+  apagarTodos();
+
+  Serial.println("ESP8266 pronto!");
+}
+
+void loop() {
+  if (Serial.available() > 0) {
+
+    String mensagem = Serial.readStringUntil('\n');
+    mensagem.trim();
+
+    int separador = mensagem.indexOf('|');
+
+    if (separador == -1) {
+      return;
+    }
+
+    String identificador = mensagem.substring(0, separador);
+    String categoria = mensagem.substring(separador + 1);
+
+    // Comando para liberar a proxima leitura
+    if (identificador == "CLEAR") {
+
+      apagarTodos();
+
+      ultimoID = "";
+      ultimaCategoria = "";
+
+      Serial.println("CLEARED|" + categoria);
+
+      return;
+    }
+
+    // Verifica se a categoria recebida e valida
+    if (
+      categoria != "paper" &&
+      categoria != "plastic" &&
+      categoria != "glass" &&
+      categoria != "metal" &&
+      categoria != "cardboard"
+    ) {
+      Serial.println("NACK|CATEGORIA_INVALIDA");
+      return;
+    }
+
+    // Evita executar novamente uma mensagem ja recebida
+    if (identificador == ultimoID) {
+      Serial.println("DONE|" + identificador + "|" + ultimaCategoria);
+      return;
+    }
+
+    // Acende somente o LED correspondente
+    acenderLED(categoria);
+
+    ultimoID = identificador;
+    ultimaCategoria = categoria;
+
+    // Confirma que recebeu a classificacao
+    Serial.println("DONE|" + identificador + "|" + categoria);
+  }
+}
